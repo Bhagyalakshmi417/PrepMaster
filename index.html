@@ -1,0 +1,1756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PrepMaster — Study Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #0d0d14;
+  --surface: #13131f;
+  --card: #1a1a2e;
+  --border: rgba(255,255,255,0.07);
+  --accent: #6c63ff;
+  --accent2: #ff6584;
+  --accent3: #43e97b;
+  --accent4: #f7971e;
+  --text: #f0f0ff;
+  --muted: #7a7a9d;
+  --danger: #ff4757;
+  --success: #43e97b;
+  --radius: 16px;
+  --font-head: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;transition:background 0.2s,color 0.2s,border-color 0.2s,opacity 0.2s}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+h1,h2,h3,h4{font-family:var(--font-head)}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--surface)}
+::-webkit-scrollbar-thumb{background:var(--accent);border-radius:3px}
+
+/* AUTH */
+.auth-wrapper{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);position:relative;overflow:hidden}
+.auth-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.15;pointer-events:none}
+.auth-blob-1{width:500px;height:500px;background:var(--accent);top:-100px;left:-100px;animation:blobMove1 12s ease-in-out infinite}
+.auth-blob-2{width:400px;height:400px;background:var(--accent2);bottom:-100px;right:-100px;animation:blobMove2 10s ease-in-out infinite}
+@keyframes blobMove1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(60px,40px) scale(1.1)}}
+@keyframes blobMove2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-40px,-30px) scale(1.15)}}
+
+.auth-card{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:48px;width:100%;max-width:440px;position:relative;z-index:2;animation:slideUp 0.5s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+
+.auth-logo{display:flex;align-items:center;gap:12px;margin-bottom:32px}
+.auth-logo-icon{width:48px;height:48px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px}
+.auth-logo h1{font-size:28px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+
+.auth-tabs{display:flex;background:var(--surface);border-radius:12px;padding:4px;margin-bottom:28px;gap:4px}
+.auth-tab{flex:1;padding:10px;border:none;border-radius:10px;background:transparent;color:var(--muted);font-family:var(--font-body);font-size:14px;font-weight:600;cursor:pointer}
+.auth-tab.active{background:var(--accent);color:#fff}
+
+.field{margin-bottom:18px}
+.field label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em}
+.field-inner{position:relative}
+.field-inner .icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;font-size:16px}
+.field input,.field select,.field textarea{width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:12px 14px 12px 42px;color:var(--text);font-family:var(--font-body);font-size:15px;outline:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,99,255,0.15)}
+.field input.no-icon,.field select.no-icon,.field textarea.no-icon{padding-left:14px}
+.field input::placeholder{color:var(--muted)}
+.field .eye-btn{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px}
+.field select option{background:var(--card)}
+.field textarea{resize:vertical;min-height:80px;padding-top:12px}
+
+.btn{width:100%;padding:14px;border:none;border-radius:12px;font-family:var(--font-body);font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+.btn-primary:hover{opacity:0.9;transform:translateY(-1px)}
+.btn-sm{padding:8px 16px;font-size:13px;border-radius:10px;width:auto}
+.btn-ghost{background:var(--surface);color:var(--text);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.btn-danger{background:rgba(255,71,87,0.15);color:var(--danger);border:1px solid rgba(255,71,87,0.2)}
+.btn-danger:hover{background:var(--danger);color:#fff}
+.btn-success{background:rgba(67,233,123,0.15);color:var(--success);border:1px solid rgba(67,233,123,0.2)}
+.btn-success:hover{background:var(--success);color:#111}
+
+.demo-box{background:rgba(108,99,255,0.1);border:1px solid rgba(108,99,255,0.2);border-radius:12px;padding:14px;margin-top:20px}
+.demo-box p{font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600}
+.demo-creds{display:flex;gap:12px}
+.demo-cred{background:var(--surface);border-radius:8px;padding:6px 10px;font-size:12px;font-family:monospace;color:var(--accent);cursor:pointer;border:none;color:var(--text)}
+.demo-cred:hover{background:var(--accent);color:#fff}
+
+/* TOAST */
+.toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:10px}
+.toast{display:flex;align-items:center;gap:12px;padding:14px 18px;border-radius:14px;font-size:14px;font-weight:500;min-width:280px;animation:toastIn 0.3s ease;box-shadow:0 8px 32px rgba(0,0,0,0.4)}
+@keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+.toast-success{background:#1a2e1a;border:1px solid var(--success);color:var(--success)}
+.toast-error{background:#2e1a1a;border:1px solid var(--danger);color:var(--danger)}
+.toast-info{background:#1a1a2e;border:1px solid var(--accent);color:var(--accent)}
+.toast-warning{background:#2e2a1a;border:1px solid var(--accent4);color:var(--accent4)}
+.toast-close{margin-left:auto;background:none;border:none;cursor:pointer;opacity:0.6;font-size:16px;color:inherit}
+
+/* LAYOUT */
+.app{display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:24px 0;flex-shrink:0}
+.sidebar-logo{padding:0 20px 24px;border-bottom:1px solid var(--border);margin-bottom:12px}
+.sidebar-logo h2{font-size:22px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sidebar-logo span{font-size:12px;color:var(--muted)}
+
+.sidebar-nav{flex:1;padding:0 12px}
+.nav-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:12px;cursor:pointer;margin-bottom:4px;font-size:14px;font-weight:500;color:var(--muted);border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:var(--card);color:var(--text)}
+.nav-item.active{background:rgba(108,99,255,0.15);color:var(--accent);border:1px solid rgba(108,99,255,0.2)}
+.nav-item .nav-icon{font-size:18px;width:24px;text-align:center}
+.nav-badge{margin-left:auto;background:var(--accent);color:#fff;font-size:10px;padding:2px 7px;border-radius:20px;font-weight:700}
+
+.sidebar-footer{padding:12px 20px;border-top:1px solid var(--border);margin-top:auto}
+.user-card{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0}
+.user-info h4{font-size:13px;font-weight:600;color:var(--text)}
+.user-info p{font-size:11px;color:var(--muted)}
+.logout-btn{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:rgba(255,71,87,0.1);color:var(--danger);border:1px solid rgba(255,71,87,0.15);cursor:pointer;font-size:13px;font-weight:600;width:100%;justify-content:center}
+.logout-btn:hover{background:var(--danger);color:#fff}
+
+/* MAIN */
+.main{flex:1;overflow-y:auto;padding:32px}
+
+/* PAGE HEADER */
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px}
+.page-header h2{font-size:28px;font-weight:800;color:var(--text)}
+.page-header p{color:var(--muted);font-size:14px;margin-top:4px}
+
+/* EXAM BANNER */
+.exam-banner{background:linear-gradient(135deg,rgba(108,99,255,0.15),rgba(255,101,132,0.1));border:1px solid rgba(108,99,255,0.25);border-radius:var(--radius);padding:18px 24px;margin-bottom:24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.exam-banner-info h3{font-size:20px;font-weight:800;color:var(--text)}
+.exam-banner-info p{color:var(--muted);font-size:13px}
+.countdown{display:flex;gap:12px;margin-left:auto}
+.countdown-unit{text-align:center;background:var(--card);border-radius:10px;padding:8px 14px;min-width:56px}
+.countdown-unit .num{font-family:var(--font-head);font-size:22px;font-weight:800;color:var(--accent)}
+.countdown-unit .lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em}
+
+/* STATS GRID */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden}
+.stat-card::after{content:attr(data-emoji);position:absolute;right:12px;top:12px;font-size:28px;opacity:0.15}
+.stat-card .stat-val{font-family:var(--font-head);font-size:32px;font-weight:800;margin-bottom:4px}
+.stat-card .stat-lbl{font-size:13px;color:var(--muted)}
+.stat-card .stat-sub{font-size:11px;margin-top:6px;padding:3px 8px;border-radius:20px;display:inline-block;font-weight:600}
+.stat-good{background:rgba(67,233,123,0.1);color:var(--success)}
+.stat-warn{background:rgba(247,151,30,0.1);color:var(--accent4)}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:20px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.card-header h3{font-size:17px;font-weight:700;color:var(--text)}
+.card-subtitle{font-size:13px;color:var(--muted);margin-top:2px}
+
+/* GRID LAYOUTS */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.three-col{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.sidebar-layout{display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start}
+
+/* FORM */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* TIMER */
+.timer-display{text-align:center;padding:32px 0}
+.timer-circle{width:180px;height:180px;border-radius:50%;border:6px solid var(--border);margin:0 auto 20px;position:relative;display:flex;align-items:center;justify-content:center;background:var(--surface)}
+.timer-circle svg{position:absolute;top:0;left:0;transform:rotate(-90deg)}
+.timer-circle .time{font-family:var(--font-head);font-size:38px;font-weight:800;color:var(--text)}
+.timer-status{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-top:4px}
+.timer-controls{display:flex;gap:12px;justify-content:center;margin-top:16px}
+.timer-btn{width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center}
+.timer-btn-main{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+.timer-btn-reset{background:var(--surface);color:var(--muted);border:1px solid var(--border)}
+.timer-presets{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+.preset-btn{padding:6px 14px;border-radius:20px;background:var(--surface);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;font-family:var(--font-body)}
+.preset-btn:hover,.preset-btn.active{background:rgba(108,99,255,0.2);border-color:var(--accent);color:var(--accent)}
+
+/* SUBJECTS */
+.subject-tag{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;border:1px solid}
+.subject-item{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--surface);border-radius:12px;margin-bottom:8px}
+.subject-hours{font-family:var(--font-head);font-weight:700;color:var(--accent)}
+
+/* SESSION LIST */
+.session-item{display:flex;align-items:flex-start;gap:14px;padding:14px 16px;background:var(--surface);border-radius:12px;margin-bottom:8px;border-left:3px solid var(--accent)}
+.session-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);margin-top:6px;flex-shrink:0}
+.session-info h4{font-size:14px;font-weight:600;color:var(--text)}
+.session-info p{font-size:12px;color:var(--muted);margin-top:2px}
+.session-time{margin-left:auto;text-align:right;flex-shrink:0}
+.session-time .duration{font-family:var(--font-head);font-weight:700;color:var(--accent);font-size:16px}
+.session-time .date{font-size:11px;color:var(--muted)}
+.delete-btn{background:none;border:none;color:var(--muted);cursor:pointer;padding:4px;border-radius:6px;font-size:14px;flex-shrink:0}
+.delete-btn:hover{color:var(--danger)}
+
+/* GOALS */
+.goal-item{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--surface);border-radius:12px;margin-bottom:8px}
+.goal-check{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);background:none;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px}
+.goal-check.done{background:var(--success);border-color:var(--success);color:#111}
+.goal-info{flex:1}
+.goal-info h4{font-size:14px;font-weight:600;color:var(--text)}
+.goal-info h4.done{text-decoration:line-through;opacity:0.5}
+.goal-info p{font-size:12px;color:var(--muted);margin-top:2px}
+.goal-deadline{font-size:11px;padding:3px 8px;border-radius:20px;background:rgba(247,151,30,0.1);color:var(--accent4);border:1px solid rgba(247,151,30,0.2)}
+.goal-deadline.overdue{background:rgba(255,71,87,0.1);color:var(--danger);border-color:rgba(255,71,87,0.2)}
+.goal-deadline.done{background:rgba(67,233,123,0.1);color:var(--success);border-color:rgba(67,233,123,0.2)}
+.priority-badge{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:700}
+.priority-high{background:rgba(255,71,87,0.15);color:var(--danger)}
+.priority-medium{background:rgba(247,151,30,0.15);color:var(--accent4)}
+.priority-low{background:rgba(67,233,123,0.15);color:var(--success)}
+
+/* TESTS */
+.test-item{padding:16px;background:var(--surface);border-radius:12px;margin-bottom:8px}
+.test-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.test-name{font-weight:600;font-size:14px}
+.test-score{font-family:var(--font-head);font-size:20px;font-weight:800}
+.test-score.pass{color:var(--success)}
+.test-score.avg{color:var(--accent4)}
+.test-score.fail{color:var(--danger)}
+.score-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:4px}
+.score-fill{height:100%;border-radius:3px;transition:width 0.8s ease}
+.score-fill.pass{background:var(--success)}
+.score-fill.avg{background:var(--accent4)}
+.score-fill.fail{background:var(--danger)}
+.test-meta{display:flex;gap:16px;font-size:12px;color:var(--muted);margin-top:8px}
+
+/* RESOURCES */
+.resource-item{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--surface);border-radius:12px;margin-bottom:8px}
+.resource-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.resource-info h4{font-size:14px;font-weight:600}
+.resource-info p{font-size:12px;color:var(--muted);margin-top:2px}
+.resource-cat{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;margin-top:4px;display:inline-block}
+.resource-actions{margin-left:auto;display:flex;gap:8px;align-items:center}
+.link-btn{padding:6px 12px;background:rgba(108,99,255,0.1);border:1px solid rgba(108,99,255,0.2);color:var(--accent);border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;cursor:pointer}
+.link-btn:hover{background:var(--accent);color:#fff}
+
+/* NOTES */
+.note-item{padding:16px;background:var(--surface);border-radius:12px;margin-bottom:8px;border-left:3px solid var(--accent4)}
+.note-item h4{font-size:14px;font-weight:600;margin-bottom:4px}
+.note-item p{font-size:13px;color:var(--muted);line-height:1.6}
+.note-meta{font-size:11px;color:var(--muted);margin-top:8px;display:flex;justify-content:space-between;align-items:center}
+
+/* PROGRESS BAR */
+.progress-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width 0.5s ease}
+
+/* STREAK */
+.streak-grid{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px}
+.streak-day{width:14px;height:14px;border-radius:3px;background:var(--border)}
+.streak-day.studied{background:var(--accent)}
+.streak-day.today{border:2px solid var(--accent2)}
+
+/* CHART CONTAINER */
+.chart-container{position:relative;height:220px}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:48px 20px;color:var(--muted)}
+.empty .empty-icon{font-size:48px;margin-bottom:12px;opacity:0.4}
+.empty p{font-size:14px}
+
+/* TAGS */
+.tag{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid}
+
+/* SETTINGS */
+.settings-section{margin-bottom:28px}
+.settings-section h3{font-size:16px;font-weight:700;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)}
+.settings-row:last-child{border-bottom:none}
+.settings-row-info h4{font-size:14px;font-weight:600}
+.settings-row-info p{font-size:12px;color:var(--muted);margin-top:2px}
+.toggle{position:relative;width:44px;height:24px}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:12px;cursor:pointer;transition:0.3s}
+.toggle-slider:before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:var(--muted);border-radius:50%;transition:0.3s}
+.toggle input:checked+.toggle-slider{background:var(--accent)}
+.toggle input:checked+.toggle-slider:before{transform:translateX(20px);background:#fff}
+.color-swatch{width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent}
+.color-swatch.active{border-color:#fff}
+.color-swatches{display:flex;gap:8px}
+
+/* PROFILE */
+.profile-section{display:flex;align-items:center;gap:16px;padding:20px;background:var(--surface);border-radius:14px;margin-bottom:20px}
+.profile-avatar{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:#fff;flex-shrink:0}
+
+/* Divider */
+.divider{height:1px;background:var(--border);margin:20px 0}
+
+/* HEATMAP */
+.heatmap-row{display:flex;gap:3px;align-items:center;margin-bottom:4px}
+.heatmap-cell{width:12px;height:12px;border-radius:2px;background:var(--border);cursor:pointer}
+.heatmap-cell[data-level="1"]{background:rgba(108,99,255,0.3)}
+.heatmap-cell[data-level="2"]{background:rgba(108,99,255,0.55)}
+.heatmap-cell[data-level="3"]{background:rgba(108,99,255,0.8)}
+.heatmap-cell[data-level="4"]{background:var(--accent)}
+.heatmap-label{font-size:10px;color:var(--muted);width:24px;text-align:right}
+
+/* SEARCH */
+.search-bar{position:relative;margin-bottom:16px}
+.search-bar input{width:100%;padding:10px 14px 10px 38px;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--font-body);font-size:14px;outline:none}
+.search-bar input:focus{border-color:var(--accent)}
+.search-bar .icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted)}
+
+/* CONFIRM MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(4px)}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:32px;max-width:360px;width:90%;animation:slideUp 0.3s ease}
+.modal h3{font-size:18px;font-weight:700;margin-bottom:8px}
+.modal p{color:var(--muted);font-size:14px;margin-bottom:24px}
+.modal-actions{display:flex;gap:12px}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+.sidebar{display:none}
+.main{padding:20px}
+.sidebar-layout{grid-template-columns:1fr}
+.two-col{grid-template-columns:1fr}
+.three-col{grid-template-columns:1fr 1fr}
+.stats-grid{grid-template-columns:1fr 1fr}
+.countdown{flex-wrap:wrap;gap:8px}
+}
+.scrollable{max-height:400px;overflow-y:auto;padding-right:4px}
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<div class="toast-container" id="toasts"></div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────────────────────────
+const ACCENT_COLORS = {
+  purple:   { accent:'#6c63ff', accent2:'#ff6584' },
+  blue:     { accent:'#00b4d8', accent2:'#0077b6' },
+  green:    { accent:'#43e97b', accent2:'#38f9d7' },
+  orange:   { accent:'#f7971e', accent2:'#ffd200' },
+  rose:     { accent:'#f43f5e', accent2:'#fb7185' },
+};
+
+const state = {
+  page: 'loading',
+  users: [],
+  currentUser: null,
+  sessions: [],
+  goals: [],
+  tests: [],
+  resources: [],
+  notes: [],
+  examName: '',
+  examDate: '',
+  timerSeconds: 25*60,
+  timerMax: 25*60,
+  timerRunning: false,
+  timerInterval: null,
+  settings: { colorScheme: 'purple', notifications: true, dailyGoal: 4 },
+  searchQuery: '',
+  activeTab: 'dashboard',
+  confirmModal: null,
+  charts: {}
+};
+
+// ─── STORAGE ─────────────────────────────────────────────────────────────────
+const save = () => {
+  if (!state.currentUser) return;
+  const uid = state.currentUser.id;
+  const data = {
+    sessions: state.sessions,
+    goals: state.goals,
+    tests: state.tests,
+    resources: state.resources,
+    notes: state.notes,
+    examName: state.examName,
+    examDate: state.examDate,
+    settings: state.settings
+  };
+  localStorage.setItem('pm_data_' + uid, JSON.stringify(data));
+};
+
+const loadUserData = (uid) => {
+  const raw = localStorage.getItem('pm_data_' + uid);
+  if (raw) {
+    const d = JSON.parse(raw);
+    state.sessions = d.sessions || [];
+    state.goals = d.goals || [];
+    state.tests = d.tests || [];
+    state.resources = d.resources || [];
+    state.notes = d.notes || [];
+    state.examName = d.examName || '';
+    state.examDate = d.examDate || '';
+    state.settings = { ...{ colorScheme:'purple', notifications:true, dailyGoal:4 }, ...(d.settings || {}) };
+  } else {
+    state.sessions = []; state.goals = []; state.tests = [];
+    state.resources = []; state.notes = [];
+    state.examName = ''; state.examDate = '';
+    state.settings = { colorScheme:'purple', notifications:true, dailyGoal:4 };
+  }
+  applyTheme(state.settings.colorScheme);
+};
+
+const loadUsers = () => {
+  state.users = JSON.parse(localStorage.getItem('pm_users') || '[]');
+  // Ensure demo user
+  if (!state.users.find(u => u.username === 'demo')) {
+    state.users.push({
+      id: 'demo',
+      username: 'demo',
+      fullName: 'Demo Student',
+      email: 'demo@prepmaster.com',
+      password: hashStr('demo123'),
+      createdAt: new Date().toISOString()
+    });
+    localStorage.setItem('pm_users', JSON.stringify(state.users));
+  }
+  const stored = localStorage.getItem('pm_current_user');
+  if (stored) {
+    state.currentUser = JSON.parse(stored);
+    loadUserData(state.currentUser.id);
+    state.page = 'app';
+  } else {
+    state.page = 'login';
+  }
+};
+
+const saveUsers = () => localStorage.setItem('pm_users', JSON.stringify(state.users));
+const hashStr = (s) => { let h=5381; for(let i=0;i<s.length;i++) h=((h<<5)+h)+s.charCodeAt(i); return h.toString(16); };
+const applyTheme = (scheme) => {
+  const c = ACCENT_COLORS[scheme] || ACCENT_COLORS.purple;
+  document.documentElement.style.setProperty('--accent', c.accent);
+  document.documentElement.style.setProperty('--accent2', c.accent2);
+};
+
+// ─── TOAST ───────────────────────────────────────────────────────────────────
+const toast = (msg, type='success') => {
+  const icons = { success:'✓', error:'✕', info:'ℹ', warning:'⚠' };
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.innerHTML = `<span>${icons[type]}</span><span>${msg}</span><button class="toast-close" onclick="this.parentElement.remove()">✕</button>`;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+};
+
+// ─── AUTH ─────────────────────────────────────────────────────────────────────
+const login = () => {
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  if (!u || !p) { toast('Fill in all fields', 'error'); return; }
+  const user = state.users.find(x => x.username === u && x.password === hashStr(p));
+  if (!user) { toast('Invalid username or password', 'error'); return; }
+  state.currentUser = user;
+  localStorage.setItem('pm_current_user', JSON.stringify(user));
+  loadUserData(user.id);
+  state.page = 'app';
+  state.activeTab = 'dashboard';
+  render();
+  toast(`Welcome back, ${user.fullName.split(' ')[0]}! 👋`);
+};
+
+const register = () => {
+  const fullName = document.getElementById('regName').value.trim();
+  const username = document.getElementById('regUser').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const password = document.getElementById('regPass').value;
+  const confirm = document.getElementById('regConfirm').value;
+  if (!fullName || !username || !email || !password) { toast('Fill in all fields', 'error'); return; }
+  if (password.length < 6) { toast('Password must be at least 6 characters', 'error'); return; }
+  if (password !== confirm) { toast('Passwords do not match', 'error'); return; }
+  if (state.users.find(u => u.username === username)) { toast('Username already taken', 'error'); return; }
+  if (state.users.find(u => u.email === email)) { toast('Email already registered', 'error'); return; }
+  const user = { id: Date.now().toString(), username, fullName, email, password: hashStr(password), createdAt: new Date().toISOString() };
+  state.users.push(user);
+  saveUsers();
+  toast('Account created! You can now login 🎉', 'success');
+  document.querySelector('[data-tab="login"]').click();
+};
+
+const logout = () => {
+  if (state.timerInterval) clearInterval(state.timerInterval);
+  state.currentUser = null;
+  localStorage.removeItem('pm_current_user');
+  state.page = 'login';
+  state.activeTab = 'dashboard';
+  render();
+};
+
+const fillDemo = () => {
+  document.getElementById('loginUser').value = 'demo';
+  document.getElementById('loginPass').value = 'demo123';
+};
+
+// ─── TIMER ───────────────────────────────────────────────────────────────────
+const startTimer = () => {
+  if (state.timerRunning) {
+    clearInterval(state.timerInterval);
+    state.timerRunning = false;
+    updateTimerDisplay();
+    return;
+  }
+  if (state.timerSeconds === 0) { toast('Timer ended. Reset first!', 'warning'); return; }
+  state.timerRunning = true;
+  state.timerInterval = setInterval(() => {
+    state.timerSeconds--;
+    updateTimerDisplay();
+    if (state.timerSeconds === 0) {
+      clearInterval(state.timerInterval);
+      state.timerRunning = false;
+      toast('⏰ Timer finished! Great work!', 'success');
+      updateTimerDisplay();
+    }
+  }, 1000);
+  updateTimerDisplay();
+};
+
+const resetTimer = () => {
+  clearInterval(state.timerInterval);
+  state.timerRunning = false;
+  state.timerSeconds = state.timerMax;
+  updateTimerDisplay();
+};
+
+const setPreset = (mins) => {
+  clearInterval(state.timerInterval);
+  state.timerRunning = false;
+  state.timerMax = mins * 60;
+  state.timerSeconds = mins * 60;
+  updateTimerDisplay();
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+};
+
+const updateTimerDisplay = () => {
+  const el = document.getElementById('timer-time');
+  const btnEl = document.getElementById('timer-btn');
+  const circleEl = document.getElementById('timer-ring');
+  if (!el) return;
+  const m = Math.floor(state.timerSeconds/60).toString().padStart(2,'0');
+  const s = (state.timerSeconds%60).toString().padStart(2,'0');
+  el.textContent = `${m}:${s}`;
+  if (btnEl) btnEl.textContent = state.timerRunning ? '⏸' : '▶';
+  if (circleEl) {
+    const pct = state.timerSeconds / state.timerMax;
+    const r = 80, circ = 2*Math.PI*r;
+    circleEl.style.strokeDasharray = circ;
+    circleEl.style.strokeDashoffset = circ * (1 - pct);
+  }
+};
+
+// ─── STUDY SESSIONS ───────────────────────────────────────────────────────────
+const addSession = () => {
+  const subject = document.getElementById('sess-subject').value.trim();
+  const topic = document.getElementById('sess-topic').value.trim();
+  const duration = parseFloat(document.getElementById('sess-duration').value);
+  const date = document.getElementById('sess-date').value;
+  const notes = document.getElementById('sess-notes').value.trim();
+  if (!subject) { toast('Enter a subject', 'error'); return; }
+  if (!duration || duration <= 0) { toast('Enter valid duration', 'error'); return; }
+  if (!date) { toast('Select a date', 'error'); return; }
+  state.sessions.unshift({ id: Date.now(), subject, topic, duration, date, notes });
+  save();
+  document.getElementById('sess-subject').value='';
+  document.getElementById('sess-topic').value='';
+  document.getElementById('sess-duration').value='';
+  document.getElementById('sess-notes').value='';
+  document.getElementById('sess-date').value=new Date().toISOString().split('T')[0];
+  toast('Study session logged! 📚');
+  refreshSessions();
+  refreshDashboard();
+};
+
+const deleteSession = (id) => {
+  state.sessions = state.sessions.filter(s => s.id !== id);
+  save();
+  toast('Session removed', 'info');
+  refreshSessions();
+  refreshDashboard();
+};
+
+const refreshSessions = () => {
+  const list = document.getElementById('sessions-list');
+  if (!list) return;
+  const q = state.searchQuery.toLowerCase();
+  const filtered = state.sessions.filter(s =>
+    !q || s.subject.toLowerCase().includes(q) || (s.topic||'').toLowerCase().includes(q)
+  );
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">📚</div><p>No sessions yet. Log your first study session!</p></div>`;
+    return;
+  }
+  list.innerHTML = filtered.map(s => `
+    <div class="session-item">
+      <div style="width:3px;height:40px;border-radius:2px;background:var(--accent);flex-shrink:0"></div>
+      <div class="session-info" style="flex:1">
+        <h4>${s.subject}</h4>
+        <p>${s.topic || '<em style="opacity:0.4">No topic</em>'} ${s.notes ? '· <span style="color:var(--muted)">'+s.notes.substring(0,40)+'...</span>' : ''}</p>
+      </div>
+      <div class="session-time">
+        <div class="duration">${s.duration}h</div>
+        <div class="date">${formatDate(s.date)}</div>
+      </div>
+      <button class="delete-btn" onclick="deleteSession(${s.id})" title="Delete">✕</button>
+    </div>
+  `).join('');
+};
+
+const refreshSubjectBreakdown = () => {
+  const el = document.getElementById('subject-breakdown');
+  if (!el) return;
+  const totals = {};
+  state.sessions.forEach(s => totals[s.subject] = (totals[s.subject]||0) + s.duration);
+  const entries = Object.entries(totals).sort((a,b)=>b[1]-a[1]);
+  const maxH = entries[0]?.[1] || 1;
+  if (entries.length === 0) { el.innerHTML = `<div class="empty"><div class="empty-icon">📊</div><p>No data yet</p></div>`; return; }
+  el.innerHTML = entries.map(([subj, hrs]) => `
+    <div class="subject-item">
+      <div style="flex:1">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+          <span style="font-size:14px;font-weight:600">${subj}</span>
+          <span class="subject-hours">${hrs.toFixed(1)}h</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${(hrs/maxH)*100}%"></div></div>
+      </div>
+    </div>
+  `).join('');
+};
+
+// ─── GOALS ───────────────────────────────────────────────────────────────────
+const addGoal = () => {
+  const title = document.getElementById('goal-title').value.trim();
+  const desc = document.getElementById('goal-desc').value.trim();
+  const deadline = document.getElementById('goal-deadline').value;
+  const priority = document.getElementById('goal-priority').value;
+  if (!title) { toast('Enter a goal title', 'error'); return; }
+  state.goals.unshift({ id: Date.now(), title, desc, deadline, priority: priority||'medium', done: false, createdAt: new Date().toISOString() });
+  save();
+  document.getElementById('goal-title').value='';
+  document.getElementById('goal-desc').value='';
+  document.getElementById('goal-deadline').value='';
+  toast('Goal added! 🎯');
+  refreshGoals();
+  refreshDashboard();
+};
+
+const toggleGoal = (id) => {
+  const g = state.goals.find(x => x.id === id);
+  if (!g) return;
+  g.done = !g.done;
+  save();
+  if (g.done) toast('Goal completed! 🎉', 'success');
+  refreshGoals();
+  refreshDashboard();
+};
+
+const deleteGoal = (id) => {
+  state.goals = state.goals.filter(g => g.id !== id);
+  save();
+  toast('Goal removed', 'info');
+  refreshGoals();
+};
+
+const refreshGoals = () => {
+  const list = document.getElementById('goals-list');
+  if (!list) return;
+  const q = state.searchQuery.toLowerCase();
+  const filtered = state.goals.filter(g => !q || g.title.toLowerCase().includes(q));
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">🎯</div><p>No goals yet. Add your first goal!</p></div>`;
+    return;
+  }
+  const today = new Date().toISOString().split('T')[0];
+  list.innerHTML = filtered.map(g => {
+    const isOverdue = g.deadline && g.deadline < today && !g.done;
+    const deadlineClass = g.done ? 'done' : isOverdue ? 'overdue' : '';
+    return `
+    <div class="goal-item">
+      <button class="goal-check ${g.done?'done':''}" onclick="toggleGoal(${g.id})" title="${g.done?'Mark incomplete':'Mark complete'}">${g.done?'✓':''}</button>
+      <div class="goal-info" style="flex:1">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <h4 class="${g.done?'done':''}">${g.title}</h4>
+          <span class="priority-badge priority-${g.priority}">${g.priority}</span>
+        </div>
+        ${g.desc ? `<p>${g.desc}</p>` : ''}
+        ${g.deadline ? `<span class="goal-deadline ${deadlineClass}" style="margin-top:6px;display:inline-block">📅 ${formatDate(g.deadline)}${isOverdue?' · Overdue':''}</span>` : ''}
+      </div>
+      <button class="delete-btn" onclick="deleteGoal(${g.id})">✕</button>
+    </div>`;
+  }).join('');
+};
+
+// ─── MOCK TESTS ───────────────────────────────────────────────────────────────
+const addTest = () => {
+  const name = document.getElementById('test-name').value.trim();
+  const subject = document.getElementById('test-subject').value.trim();
+  const score = parseFloat(document.getElementById('test-score').value);
+  const total = parseFloat(document.getElementById('test-total').value);
+  const date = document.getElementById('test-date').value;
+  const notes = document.getElementById('test-notes').value.trim();
+  if (!name) { toast('Enter test name', 'error'); return; }
+  if (isNaN(score) || isNaN(total) || total <= 0) { toast('Enter valid scores', 'error'); return; }
+  if (score > total) { toast('Score cannot exceed total', 'error'); return; }
+  const pct = (score/total)*100;
+  state.tests.unshift({ id: Date.now(), name, subject, score, total, pct, date, notes });
+  save();
+  document.getElementById('test-name').value='';
+  document.getElementById('test-subject').value='';
+  document.getElementById('test-score').value='';
+  document.getElementById('test-total').value='';
+  document.getElementById('test-notes').value='';
+  toast(`Test recorded! You scored ${pct.toFixed(1)}% 📝`);
+  refreshTests();
+  refreshDashboard();
+};
+
+const deleteTest = (id) => {
+  state.tests = state.tests.filter(t => t.id !== id);
+  save();
+  toast('Test removed', 'info');
+  refreshTests();
+};
+
+const refreshTests = () => {
+  const list = document.getElementById('tests-list');
+  if (!list) return;
+  if (state.tests.length === 0) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">📝</div><p>No test results yet. Add your first mock test!</p></div>`;
+    return;
+  }
+  list.innerHTML = state.tests.map(t => {
+    const cls = t.pct>=75?'pass':t.pct>=50?'avg':'fail';
+    return `
+    <div class="test-item">
+      <div class="test-header">
+        <div>
+          <div class="test-name">${t.name}</div>
+          ${t.subject?`<div style="font-size:11px;color:var(--muted);margin-top:2px">${t.subject}</div>`:''}
+        </div>
+        <div style="text-align:right">
+          <div class="test-score ${cls}">${t.pct.toFixed(1)}%</div>
+          <div style="font-size:11px;color:var(--muted)">${t.score}/${t.total}</div>
+        </div>
+      </div>
+      <div class="score-bar"><div class="score-fill ${cls}" style="width:${t.pct}%"></div></div>
+      <div class="test-meta">
+        <span>📅 ${t.date ? formatDate(t.date) : 'No date'}</span>
+        ${t.notes?`<span>📌 ${t.notes.substring(0,40)}</span>`:''}
+        <button class="delete-btn" onclick="deleteTest(${t.id})" style="margin-left:auto">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Update test trend chart
+  if (state.charts.testTrend) state.charts.testTrend.destroy();
+  const ctx = document.getElementById('test-trend-chart');
+  if (ctx && state.tests.length > 0) {
+    const recent = [...state.tests].reverse().slice(-10);
+    state.charts.testTrend = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: recent.map(t => t.name.substring(0,12)),
+        datasets: [{ label:'Score %', data: recent.map(t=>t.pct), borderColor: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(), backgroundColor:'rgba(108,99,255,0.1)', tension:0.4, fill:true, borderWidth:2.5, pointRadius:5, pointBackgroundColor:getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() }]
+      },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ y:{beginAtZero:true,max:100,ticks:{color:'#7a7a9d'},grid:{color:'rgba(255,255,255,0.05)'}}, x:{ticks:{color:'#7a7a9d'},grid:{color:'rgba(255,255,255,0.05)'}} } }
+    });
+  }
+};
+
+// ─── RESOURCES ───────────────────────────────────────────────────────────────
+const RESOURCE_ICONS = { Video:'🎬', Book:'📖', Notes:'📄', Website:'🌐', Practice:'✏️', Other:'🗂' };
+const RESOURCE_COLORS = { Video:'rgba(255,101,132,0.15)', Book:'rgba(108,99,255,0.15)', Notes:'rgba(247,151,30,0.15)', Website:'rgba(0,180,216,0.15)', Practice:'rgba(67,233,123,0.15)', Other:'rgba(122,122,157,0.15)' };
+
+const addResource = () => {
+  const title = document.getElementById('res-title').value.trim();
+  const url = document.getElementById('res-url').value.trim();
+  const category = document.getElementById('res-cat').value;
+  const tags = document.getElementById('res-tags').value.trim();
+  if (!title) { toast('Enter a title', 'error'); return; }
+  state.resources.unshift({ id: Date.now(), title, url, category: category||'Other', tags: tags ? tags.split(',').map(t=>t.trim()) : [], addedAt: new Date().toISOString() });
+  save();
+  document.getElementById('res-title').value='';
+  document.getElementById('res-url').value='';
+  document.getElementById('res-tags').value='';
+  toast('Resource saved! 📚');
+  refreshResources();
+};
+
+const deleteResource = (id) => {
+  state.resources = state.resources.filter(r => r.id !== id);
+  save();
+  toast('Resource removed', 'info');
+  refreshResources();
+};
+
+const refreshResources = () => {
+  const list = document.getElementById('resources-list');
+  if (!list) return;
+  const q = state.searchQuery.toLowerCase();
+  const filterCat = document.getElementById('res-filter')?.value || 'all';
+  const filtered = state.resources.filter(r =>
+    (!q || r.title.toLowerCase().includes(q) || r.tags.join(' ').toLowerCase().includes(q)) &&
+    (filterCat === 'all' || r.category === filterCat)
+  );
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">🗂</div><p>No resources yet. Add your study materials!</p></div>`;
+    return;
+  }
+  list.innerHTML = filtered.map(r => `
+    <div class="resource-item">
+      <div class="resource-icon" style="background:${RESOURCE_COLORS[r.category]}">${RESOURCE_ICONS[r.category]}</div>
+      <div class="resource-info" style="flex:1">
+        <h4>${r.title}</h4>
+        <span class="resource-cat" style="background:${RESOURCE_COLORS[r.category]};color:var(--accent);border:1px solid rgba(108,99,255,0.2)">${r.category}</span>
+        ${r.tags.length ? `<div style="margin-top:4px">${r.tags.map(t=>`<span class="tag" style="margin-right:4px;border-color:var(--border);color:var(--muted)">🏷 ${t}</span>`).join('')}</div>` : ''}
+      </div>
+      <div class="resource-actions">
+        ${r.url ? `<a href="${r.url}" target="_blank" rel="noopener" class="link-btn">Open ↗</a>` : '<span style="font-size:12px;color:var(--muted)">No link</span>'}
+        <button class="delete-btn" onclick="deleteResource(${r.id})">✕</button>
+      </div>
+    </div>
+  `).join('');
+};
+
+// ─── NOTES ───────────────────────────────────────────────────────────────────
+const addNote = () => {
+  const title = document.getElementById('note-title').value.trim();
+  const content = document.getElementById('note-content').value.trim();
+  const subject = document.getElementById('note-subject').value.trim();
+  if (!title || !content) { toast('Fill in title and content', 'error'); return; }
+  state.notes.unshift({ id: Date.now(), title, content, subject, createdAt: new Date().toISOString() });
+  save();
+  document.getElementById('note-title').value='';
+  document.getElementById('note-content').value='';
+  document.getElementById('note-subject').value='';
+  toast('Note saved! 📝');
+  refreshNotes();
+};
+
+const deleteNote = (id) => {
+  state.notes = state.notes.filter(n => n.id !== id);
+  save();
+  toast('Note removed', 'info');
+  refreshNotes();
+};
+
+const refreshNotes = () => {
+  const list = document.getElementById('notes-list');
+  if (!list) return;
+  const q = state.searchQuery.toLowerCase();
+  const filtered = state.notes.filter(n => !q || n.title.toLowerCase().includes(q) || n.content.toLowerCase().includes(q));
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">📓</div><p>No notes yet. Write your first note!</p></div>`;
+    return;
+  }
+  list.innerHTML = filtered.map(n => `
+    <div class="note-item">
+      <h4>${n.title}</h4>
+      <p>${n.content}</p>
+      <div class="note-meta">
+        <span>${n.subject ? '📘 '+n.subject : ''}</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span>${formatDate(n.createdAt.split('T')[0])}</span>
+          <button class="delete-btn" onclick="deleteNote(${n.id})">✕</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+};
+
+// ─── EXAM / SETTINGS ─────────────────────────────────────────────────────────
+const saveExam = () => {
+  state.examName = document.getElementById('exam-name').value.trim();
+  state.examDate = document.getElementById('exam-date').value;
+  save();
+  toast('Exam details saved! 📅');
+  refreshDashboard();
+};
+
+const saveSettings = () => {
+  state.settings.dailyGoal = parseFloat(document.getElementById('daily-goal').value) || 4;
+  save();
+  toast('Settings saved ✓');
+  refreshDashboard();
+};
+
+const setColorScheme = (scheme) => {
+  state.settings.colorScheme = scheme;
+  save();
+  applyTheme(scheme);
+  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+  document.querySelector(`[data-scheme="${scheme}"]`)?.classList.add('active');
+  toast('Theme updated 🎨');
+};
+
+const exportData = () => {
+  const data = { user: state.currentUser.username, sessions: state.sessions, goals: state.goals, tests: state.tests, resources: state.resources, notes: state.notes, examName: state.examName, examDate: state.examDate, exportedAt: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `prepmaster-${state.currentUser.username}-${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  toast('Data exported! 💾');
+};
+
+const clearAllData = () => {
+  if (!confirm('Delete ALL your data? This cannot be undone!')) return;
+  state.sessions=[]; state.goals=[]; state.tests=[]; state.resources=[]; state.notes=[];
+  save();
+  toast('All data cleared', 'warning');
+  render();
+};
+
+// ─── DASHBOARD ───────────────────────────────────────────────────────────────
+const refreshDashboard = () => {
+  // Stats
+  const totalHrs = state.sessions.reduce((s,x)=>s+x.duration,0);
+  const completedGoals = state.goals.filter(g=>g.done).length;
+  const avgScore = state.tests.length ? state.tests.reduce((s,t)=>s+t.pct,0)/state.tests.length : 0;
+  const streak = calcStreak();
+  const todayHrs = state.sessions.filter(s=>s.date===today()).reduce((s,x)=>s+x.duration,0);
+  const dailyGoal = state.settings.dailyGoal || 4;
+
+  updateEl('stat-hours', totalHrs.toFixed(1)+'h');
+  updateEl('stat-streak', streak+' days');
+  updateEl('stat-goals', completedGoals+'/'+state.goals.length);
+  updateEl('stat-score', avgScore.toFixed(1)+'%');
+
+  const subEl = document.getElementById('stat-hours-sub');
+  if (subEl) { subEl.textContent = `${todayHrs.toFixed(1)}/${dailyGoal}h today`; subEl.className = 'stat-sub '+(todayHrs>=dailyGoal?'stat-good':'stat-warn'); }
+
+  // Countdown
+  updateCountdown();
+
+  // Weekly chart
+  const wChart = document.getElementById('weekly-chart');
+  if (wChart) {
+    if (state.charts.weekly) state.charts.weekly.destroy();
+    const days = [...Array(7)].map((_,i) => { const d = new Date(); d.setDate(d.getDate()-6+i); return d.toISOString().split('T')[0]; });
+    const hrs = days.map(d => state.sessions.filter(s=>s.date===d).reduce((s,x)=>s+x.duration,0));
+    const labels = days.map(d => ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(d+'T12:00:00').getDay()]);
+    const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+    state.charts.weekly = new Chart(wChart, {
+      type:'bar',
+      data:{ labels, datasets:[{ label:'Study Hours', data:hrs, backgroundColor: hrs.map(h=>h>0?accent+'99':'rgba(255,255,255,0.05)'), borderColor: hrs.map(h=>h>0?accent:'transparent'), borderWidth:2, borderRadius:8 }] },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ y:{beginAtZero:true,ticks:{color:'#7a7a9d'},grid:{color:'rgba(255,255,255,0.05)'}}, x:{ticks:{color:'#7a7a9d'},grid:{display:false}} } }
+    });
+  }
+
+  // Goal progress doughnut
+  const gChart = document.getElementById('goals-chart');
+  if (gChart && state.goals.length > 0) {
+    if (state.charts.goals) state.charts.goals.destroy();
+    const done = state.goals.filter(g=>g.done).length;
+    const notDone = state.goals.length - done;
+    state.charts.goals = new Chart(gChart, {
+      type:'doughnut',
+      data:{ labels:['Done','Pending'], datasets:[{ data:[done,notDone], backgroundColor:['rgba(67,233,123,0.8)','rgba(255,255,255,0.08)'], borderWidth:0 }] },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:true, position:'bottom', labels:{color:'#7a7a9d',font:{size:11}} } }, cutout:'75%' }
+    });
+  }
+
+  // Subject distribution pie
+  const sChart = document.getElementById('subject-chart');
+  if (sChart && state.sessions.length > 0) {
+    if (state.charts.subject) state.charts.subject.destroy();
+    const totals = {};
+    state.sessions.forEach(s => totals[s.subject] = (totals[s.subject]||0)+s.duration);
+    const entries = Object.entries(totals);
+    const COLORS = ['rgba(108,99,255,0.8)','rgba(255,101,132,0.8)','rgba(67,233,123,0.8)','rgba(247,151,30,0.8)','rgba(0,180,216,0.8)','rgba(168,85,247,0.8)'];
+    state.charts.subject = new Chart(sChart, {
+      type:'doughnut',
+      data:{ labels: entries.map(e=>e[0]), datasets:[{ data: entries.map(e=>e[1]), backgroundColor: entries.map((_,i)=>COLORS[i%COLORS.length]), borderWidth:0 }] },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:true, position:'bottom', labels:{color:'#7a7a9d',font:{size:11}} } }, cutout:'65%' }
+    });
+  }
+
+  // Heatmap
+  const heatmap = document.getElementById('heatmap');
+  if (heatmap) {
+    const days = [...Array(63)].map((_,i) => { const d = new Date(); d.setDate(d.getDate()-62+i); return d.toISOString().split('T')[0]; });
+    const cells = days.map(d => {
+      const hrs = state.sessions.filter(s=>s.date===d).reduce((s,x)=>s+x.duration,0);
+      const level = hrs===0?0:hrs<1?1:hrs<2?2:hrs<4?3:4;
+      return `<div class="heatmap-cell" data-level="${level}" title="${d}: ${hrs.toFixed(1)}h"></div>`;
+    });
+    heatmap.innerHTML = cells.join('');
+  }
+
+  // Recent sessions on dashboard
+  const recentList = document.getElementById('recent-sessions');
+  if (recentList) {
+    const recent = state.sessions.slice(0,5);
+    if (recent.length === 0) { recentList.innerHTML = `<div class="empty" style="padding:24px"><div class="empty-icon">📚</div><p>No sessions yet</p></div>`; return; }
+    recentList.innerHTML = recent.map(s => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--surface);border-radius:10px;margin-bottom:6px">
+        <div>
+          <div style="font-size:13px;font-weight:600">${s.subject}</div>
+          <div style="font-size:11px;color:var(--muted)">${s.topic||'General'} · ${formatDate(s.date)}</div>
+        </div>
+        <div style="font-family:var(--font-head);font-weight:700;color:var(--accent)">${s.duration}h</div>
+      </div>
+    `).join('');
+  }
+};
+
+const updateCountdown = () => {
+  const el = document.getElementById('countdown-container');
+  const nameEl = document.getElementById('exam-display-name');
+  if (!el) return;
+  if (!state.examDate) { if(el) el.style.display='none'; return; }
+  el.style.display='flex';
+  if(nameEl) nameEl.textContent = state.examName || 'Exam';
+  const diff = Math.ceil((new Date(state.examDate) - new Date()) / (1000*60*60*24));
+  const days = Math.max(0, diff);
+  const months = Math.floor(days/30);
+  const weeks = Math.floor((days%30)/7);
+  const remDays = days%7;
+  updateEl('cd-months', months);
+  updateEl('cd-weeks', weeks);
+  updateEl('cd-days', remDays);
+};
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+const today = () => new Date().toISOString().split('T')[0];
+const formatDate = (d) => { if(!d) return ''; const dt = new Date(d+'T12:00:00'); return dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); };
+const updateEl = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+const calcStreak = () => {
+  const dates = [...new Set(state.sessions.map(s=>s.date))].sort().reverse();
+  let streak = 0;
+  for (let i=0;i<dates.length;i++) {
+    const exp = new Date(); exp.setDate(exp.getDate()-i);
+    if (dates[i] === exp.toISOString().split('T')[0]) streak++;
+    else break;
+  }
+  return streak;
+};
+
+// ─── CHANGE PASSWORD ─────────────────────────────────────────────────────────
+const changePassword = () => {
+  const curr = document.getElementById('curr-pass').value;
+  const newP = document.getElementById('new-pass').value;
+  const conf = document.getElementById('conf-pass').value;
+  if (hashStr(curr) !== state.currentUser.password) { toast('Current password is wrong', 'error'); return; }
+  if (newP.length < 6) { toast('New password must be 6+ characters', 'error'); return; }
+  if (newP !== conf) { toast('Passwords do not match', 'error'); return; }
+  state.currentUser.password = hashStr(newP);
+  state.users = state.users.map(u => u.id===state.currentUser.id ? state.currentUser : u);
+  saveUsers();
+  localStorage.setItem('pm_current_user', JSON.stringify(state.currentUser));
+  document.getElementById('curr-pass').value='';
+  document.getElementById('new-pass').value='';
+  document.getElementById('conf-pass').value='';
+  toast('Password changed successfully! 🔒', 'success');
+};
+
+// ─── SEARCH ──────────────────────────────────────────────────────────────────
+const handleSearch = (q) => {
+  state.searchQuery = q;
+  if (state.activeTab === 'study') refreshSessions();
+  if (state.activeTab === 'goals') refreshGoals();
+  if (state.activeTab === 'resources') refreshResources();
+  if (state.activeTab === 'notes') refreshNotes();
+};
+
+// ─── NAVIGATION ──────────────────────────────────────────────────────────────
+const navigate = (tab) => {
+  state.activeTab = tab;
+  state.searchQuery = '';
+  render();
+};
+
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+const render = () => {
+  const app = document.getElementById('app');
+  if (state.page === 'login') { app.innerHTML = renderAuth(); bindAuth(); return; }
+  if (state.page === 'app')  { app.innerHTML = renderApp(); bindApp(); refreshAll(); return; }
+};
+
+const refreshAll = () => {
+  if (state.activeTab === 'dashboard') refreshDashboard();
+  if (state.activeTab === 'study') { refreshSessions(); refreshSubjectBreakdown(); }
+  if (state.activeTab === 'goals') refreshGoals();
+  if (state.activeTab === 'tests') refreshTests();
+  if (state.activeTab === 'resources') refreshResources();
+  if (state.activeTab === 'notes') refreshNotes();
+};
+
+// ─── RENDER AUTH ─────────────────────────────────────────────────────────────
+const renderAuth = () => `
+<div class="auth-wrapper">
+  <div class="auth-blob auth-blob-1"></div>
+  <div class="auth-blob auth-blob-2"></div>
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">📚</div>
+      <h1>PrepMaster</h1>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="login" onclick="switchAuthTab('login')">Login</button>
+      <button class="auth-tab" data-tab="register" onclick="switchAuthTab('register')">Sign Up</button>
+    </div>
+
+    <div id="login-form">
+      <div class="field">
+        <label>Username</label>
+        <div class="field-inner">
+          <span class="icon">👤</span>
+          <input type="text" id="loginUser" placeholder="your_username" autocomplete="username" onkeydown="if(event.key==='Enter')login()">
+        </div>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <div class="field-inner">
+          <span class="icon">🔒</span>
+          <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()">
+          <button class="eye-btn" onclick="togglePass('loginPass',this)">👁</button>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="login()">Login →</button>
+      <div class="demo-box">
+        <p>🎓 Try with demo account:</p>
+        <div class="demo-creds">
+          <button class="demo-cred" onclick="fillDemo()">Click to autofill demo credentials</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="register-form" style="display:none">
+      <div class="field">
+        <label>Full Name</label>
+        <div class="field-inner"><span class="icon">✍</span><input type="text" id="regName" placeholder="John Doe"></div>
+      </div>
+      <div class="field">
+        <label>Username</label>
+        <div class="field-inner"><span class="icon">👤</span><input type="text" id="regUser" placeholder="john_doe"></div>
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <div class="field-inner"><span class="icon">📧</span><input type="email" id="regEmail" placeholder="john@email.com"></div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label>Password</label>
+          <div class="field-inner"><span class="icon">🔒</span><input type="password" id="regPass" placeholder="Min 6 chars"><button class="eye-btn" onclick="togglePass('regPass',this)">👁</button></div>
+        </div>
+        <div class="field">
+          <label>Confirm</label>
+          <div class="field-inner"><span class="icon">🔒</span><input type="password" id="regConfirm" placeholder="Repeat"></div>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="register()">Create Account →</button>
+    </div>
+  </div>
+</div>`;
+
+const switchAuthTab = (tab) => {
+  document.getElementById('login-form').style.display = tab==='login'?'block':'none';
+  document.getElementById('register-form').style.display = tab==='register'?'block':'none';
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.toggle('active', t.dataset.tab===tab));
+};
+
+const togglePass = (id, btn) => {
+  const inp = document.getElementById(id);
+  inp.type = inp.type==='password'?'text':'password';
+  btn.textContent = inp.type==='password'?'👁':'🙈';
+};
+
+const bindAuth = () => {};
+const bindApp = () => {
+  // Timer update
+  updateTimerDisplay();
+  // Set today's date for forms
+  document.querySelectorAll('.date-today').forEach(el => { if (!el.value) el.value = today(); });
+  // Set current settings values
+  const dg = document.getElementById('daily-goal');
+  if (dg) dg.value = state.settings.dailyGoal || 4;
+  const examN = document.getElementById('exam-name');
+  const examD = document.getElementById('exam-date');
+  if (examN) examN.value = state.examName;
+  if (examD) examD.value = state.examDate;
+  // Color swatches
+  document.querySelectorAll('.color-swatch').forEach(s => {
+    s.classList.toggle('active', s.dataset.scheme === state.settings.colorScheme);
+  });
+  // Profile
+  updateEl('profile-name', state.currentUser.fullName);
+  updateEl('profile-username', '@'+state.currentUser.username);
+  updateEl('profile-email', state.currentUser.email);
+  const regDate = new Date(state.currentUser.createdAt).toLocaleDateString('en-US',{month:'long',year:'numeric'});
+  updateEl('profile-joined', 'Member since '+regDate);
+};
+
+// ─── RENDER APP ───────────────────────────────────────────────────────────────
+const renderApp = () => {
+  const initials = state.currentUser.fullName.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+  const navItems = [
+    { id:'dashboard', icon:'📊', label:'Dashboard' },
+    { id:'study', icon:'📚', label:'Study Log' },
+    { id:'goals', icon:'🎯', label:'Goals', badge: state.goals.filter(g=>!g.done).length || null },
+    { id:'tests', icon:'📝', label:'Mock Tests' },
+    { id:'resources', icon:'🗂', label:'Resources' },
+    { id:'notes', icon:'📓', label:'Notes' },
+    { id:'settings', icon:'⚙', label:'Settings' },
+  ];
+
+  return `
+<div class="app">
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <h2>PrepMaster</h2>
+      <span>${state.examName || 'Your Study Tracker'}</span>
+    </div>
+    <nav class="sidebar-nav">
+      ${navItems.map(n=>`
+        <button class="nav-item ${state.activeTab===n.id?'active':''}" onclick="navigate('${n.id}')">
+          <span class="nav-icon">${n.icon}</span>
+          <span>${n.label}</span>
+          ${n.badge?`<span class="nav-badge">${n.badge}</span>`:''}
+        </button>
+      `).join('')}
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="avatar">${initials}</div>
+        <div class="user-info">
+          <h4>${state.currentUser.fullName}</h4>
+          <p>@${state.currentUser.username}</p>
+        </div>
+      </div>
+      <button class="logout-btn" onclick="logout()">⏻ Logout</button>
+    </div>
+  </div>
+  <div class="main">${renderPage()}</div>
+</div>`;
+};
+
+const renderPage = () => {
+  switch(state.activeTab) {
+    case 'dashboard':  return renderDashboard();
+    case 'study':      return renderStudy();
+    case 'goals':      return renderGoals();
+    case 'tests':      return renderTests();
+    case 'resources':  return renderResources();
+    case 'notes':      return renderNotes();
+    case 'settings':   return renderSettings();
+    default:           return renderDashboard();
+  }
+};
+
+// ─── DASHBOARD PAGE ───────────────────────────────────────────────────────────
+const renderDashboard = () => `
+<div class="page-header">
+  <div>
+    <h2>Dashboard</h2>
+    <p>Track your preparation at a glance</p>
+  </div>
+  <button class="btn btn-ghost btn-sm" onclick="exportData()" style="width:auto">⬇ Export Data</button>
+</div>
+
+<div id="countdown-container" class="exam-banner" style="display:none">
+  <div>📅</div>
+  <div class="exam-banner-info">
+    <h3 id="exam-display-name">Exam</h3>
+    <p>Keep going! Your hard work will pay off.</p>
+  </div>
+  <div class="countdown" id="countdown">
+    <div class="countdown-unit"><div class="num" id="cd-months">0</div><div class="lbl">Months</div></div>
+    <div class="countdown-unit"><div class="num" id="cd-weeks">0</div><div class="lbl">Weeks</div></div>
+    <div class="countdown-unit"><div class="num" id="cd-days">0</div><div class="lbl">Days</div></div>
+  </div>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card" data-emoji="⏱">
+    <div class="stat-val" id="stat-hours" style="color:var(--accent)">0h</div>
+    <div class="stat-lbl">Total Study Hours</div>
+    <div class="stat-sub stat-warn" id="stat-hours-sub">0/4h today</div>
+  </div>
+  <div class="stat-card" data-emoji="🔥">
+    <div class="stat-val" id="stat-streak" style="color:#ff6584">0 days</div>
+    <div class="stat-lbl">Study Streak</div>
+    <div class="stat-sub stat-good">Keep it going!</div>
+  </div>
+  <div class="stat-card" data-emoji="🎯">
+    <div class="stat-val" id="stat-goals" style="color:var(--accent3)">0/0</div>
+    <div class="stat-lbl">Goals Completed</div>
+    <div class="stat-sub stat-good">Great progress</div>
+  </div>
+  <div class="stat-card" data-emoji="📊">
+    <div class="stat-val" id="stat-score" style="color:var(--accent4)">0%</div>
+    <div class="stat-lbl">Avg Test Score</div>
+    <div class="stat-sub stat-warn">Across all tests</div>
+  </div>
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <div class="card-header"><h3>📅 Weekly Study Hours</h3></div>
+    <div class="chart-container"><canvas id="weekly-chart"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h3>🎯 Goals Progress</h3></div>
+    <div class="chart-container"><canvas id="goals-chart"></canvas></div>
+  </div>
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <div class="card-header"><h3>📚 Subject Distribution</h3></div>
+    <div class="chart-container"><canvas id="subject-chart"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h3>🕒 Recent Sessions</h3></div>
+    <div id="recent-sessions"></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div>
+      <h3>📆 Study Heatmap</h3>
+      <div class="card-subtitle">Last 63 days of activity</div>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center;font-size:11px;color:var(--muted)">
+      Less
+      <div style="width:10px;height:10px;border-radius:2px;background:var(--border)"></div>
+      <div style="width:10px;height:10px;border-radius:2px;background:rgba(108,99,255,0.3)"></div>
+      <div style="width:10px;height:10px;border-radius:2px;background:rgba(108,99,255,0.6)"></div>
+      <div style="width:10px;height:10px;border-radius:2px;background:var(--accent)"></div>
+      More
+    </div>
+  </div>
+  <div id="heatmap" class="streak-grid"></div>
+</div>`;
+
+// ─── STUDY PAGE ───────────────────────────────────────────────────────────────
+const renderStudy = () => `
+<div class="page-header">
+  <div><h2>Study Log</h2><p>Track every minute of your preparation</p></div>
+</div>
+<div class="sidebar-layout">
+  <div>
+    <div class="card">
+      <div class="card-header"><h3>⏱ Study Timer</h3></div>
+      <div class="timer-display">
+        <div class="timer-circle">
+          <svg width="180" height="180" viewBox="0 0 180 180">
+            <circle cx="90" cy="90" r="80" stroke="var(--border)" stroke-width="8" fill="none"/>
+            <circle id="timer-ring" cx="90" cy="90" r="80" stroke="var(--accent)" stroke-width="8" fill="none" stroke-linecap="round" style="stroke-dasharray:502;stroke-dashoffset:0;transition:stroke-dashoffset 1s linear"/>
+          </svg>
+          <div style="position:absolute;text-align:center">
+            <div class="time" id="timer-time">25:00</div>
+            <div class="timer-status" id="timer-status">Ready</div>
+          </div>
+        </div>
+        <div class="timer-controls">
+          <button class="timer-btn timer-btn-reset" onclick="resetTimer()" title="Reset">↺</button>
+          <button class="timer-btn timer-btn-main" id="timer-btn" onclick="startTimer()">▶</button>
+        </div>
+        <div class="timer-presets">
+          <button class="preset-btn active" onclick="setPreset(25,this)">25 min</button>
+          <button class="preset-btn" onclick="setPreset(45,this)">45 min</button>
+          <button class="preset-btn" onclick="setPreset(60,this)">60 min</button>
+          <button class="preset-btn" onclick="setPreset(90,this)">90 min</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3>➕ Log Session</h3></div>
+      <div class="field">
+        <label>Subject *</label>
+        <div class="field-inner"><span class="icon">📘</span><input type="text" id="sess-subject" placeholder="e.g. Mathematics"></div>
+      </div>
+      <div class="field">
+        <label>Topic</label>
+        <div class="field-inner"><span class="icon">🔖</span><input type="text" id="sess-topic" placeholder="e.g. Integration"></div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label>Duration (hrs) *</label>
+          <div class="field-inner"><span class="icon">⏱</span><input type="number" id="sess-duration" placeholder="1.5" step="0.5" min="0.5"></div>
+        </div>
+        <div class="field">
+          <label>Date *</label>
+          <input type="date" class="no-icon date-today" id="sess-date">
+        </div>
+      </div>
+      <div class="field">
+        <label>Notes</label>
+        <textarea class="no-icon" id="sess-notes" placeholder="Key learnings, topics covered..."></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="addSession()">Log Session →</button>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3>📊 By Subject</h3></div>
+      <div id="subject-breakdown"></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="card">
+      <div class="card-header">
+        <h3>📋 All Sessions <span style="color:var(--muted);font-size:13px;font-weight:400" id="session-count"></span></h3>
+      </div>
+      <div class="search-bar">
+        <span class="icon">🔍</span>
+        <input type="text" placeholder="Search sessions..." oninput="handleSearch(this.value)" value="${state.searchQuery}">
+      </div>
+      <div class="scrollable" id="sessions-list"></div>
+    </div>
+  </div>
+</div>`;
+
+// ─── GOALS PAGE ───────────────────────────────────────────────────────────────
+const renderGoals = () => `
+<div class="page-header">
+  <div><h2>Goals</h2><p>Set targets and crush them one by one</p></div>
+</div>
+<div class="sidebar-layout">
+  <div class="card">
+    <div class="card-header"><h3>➕ New Goal</h3></div>
+    <div class="field">
+      <label>Goal Title *</label>
+      <div class="field-inner"><span class="icon">🎯</span><input type="text" id="goal-title" placeholder="e.g. Finish Organic Chemistry"></div>
+    </div>
+    <div class="field">
+      <label>Description</label>
+      <textarea class="no-icon" id="goal-desc" placeholder="Details about this goal..."></textarea>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label>Deadline</label>
+        <input type="date" class="no-icon" id="goal-deadline">
+      </div>
+      <div class="field">
+        <label>Priority</label>
+        <select class="no-icon" id="goal-priority">
+          <option value="low">🟢 Low</option>
+          <option value="medium" selected>🟡 Medium</option>
+          <option value="high">🔴 High</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="addGoal()">Add Goal →</button>
+
+    <div class="divider"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div style="text-align:center;padding:12px;background:var(--surface);border-radius:12px">
+        <div style="font-family:var(--font-head);font-size:24px;font-weight:800;color:var(--success)">${state.goals.filter(g=>g.done).length}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">COMPLETED</div>
+      </div>
+      <div style="text-align:center;padding:12px;background:var(--surface);border-radius:12px">
+        <div style="font-family:var(--font-head);font-size:24px;font-weight:800;color:var(--accent4)">${state.goals.filter(g=>!g.done).length}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">PENDING</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3>📋 All Goals</h3></div>
+    <div class="search-bar">
+      <span class="icon">🔍</span>
+      <input type="text" placeholder="Search goals..." oninput="handleSearch(this.value)" value="${state.searchQuery}">
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="filterGoals('all')" style="font-size:11px">All</button>
+      <button class="btn btn-ghost btn-sm" onclick="filterGoals('pending')" style="font-size:11px">Pending</button>
+      <button class="btn btn-ghost btn-sm" onclick="filterGoals('done')" style="font-size:11px">Done</button>
+      <button class="btn btn-ghost btn-sm" onclick="filterGoals('high')" style="font-size:11px">🔴 High Priority</button>
+    </div>
+    <div class="scrollable" id="goals-list"></div>
+  </div>
+</div>`;
+
+const filterGoals = (type) => {
+  const list = document.getElementById('goals-list');
+  if (!list) return;
+  let filtered = state.goals;
+  if (type === 'pending') filtered = state.goals.filter(g=>!g.done);
+  if (type === 'done') filtered = state.goals.filter(g=>g.done);
+  if (type === 'high') filtered = state.goals.filter(g=>g.priority==='high'&&!g.done);
+  const today2 = today();
+  list.innerHTML = filtered.length === 0
+    ? `<div class="empty"><div class="empty-icon">🎯</div><p>No goals found</p></div>`
+    : filtered.map(g => {
+        const isOverdue = g.deadline && g.deadline < today2 && !g.done;
+        const deadlineClass = g.done ? 'done' : isOverdue ? 'overdue' : '';
+        return `
+        <div class="goal-item">
+          <button class="goal-check ${g.done?'done':''}" onclick="toggleGoal(${g.id})">${g.done?'✓':''}</button>
+          <div class="goal-info" style="flex:1">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <h4 class="${g.done?'done':''}">${g.title}</h4>
+              <span class="priority-badge priority-${g.priority}">${g.priority}</span>
+            </div>
+            ${g.desc ? `<p>${g.desc}</p>` : ''}
+            ${g.deadline ? `<span class="goal-deadline ${deadlineClass}" style="margin-top:6px;display:inline-block">📅 ${formatDate(g.deadline)}${isOverdue?' · Overdue':''}</span>` : ''}
+          </div>
+          <button class="delete-btn" onclick="deleteGoal(${g.id})">✕</button>
+        </div>`;
+      }).join('');
+};
+
+// ─── TESTS PAGE ───────────────────────────────────────────────────────────────
+const renderTests = () => {
+  const avg = state.tests.length ? state.tests.reduce((s,t)=>s+t.pct,0)/state.tests.length : 0;
+  const best = state.tests.length ? Math.max(...state.tests.map(t=>t.pct)) : 0;
+  const last = state.tests[0]?.pct || 0;
+  return `
+<div class="page-header">
+  <div><h2>Mock Tests</h2><p>Track your exam performance over time</p></div>
+</div>
+
+<div class="three-col" style="margin-bottom:20px">
+  <div class="stat-card" data-emoji="📈">
+    <div class="stat-val" style="color:var(--accent)">${avg.toFixed(1)}%</div>
+    <div class="stat-lbl">Average Score</div>
+  </div>
+  <div class="stat-card" data-emoji="🏆">
+    <div class="stat-val" style="color:var(--success)">${best.toFixed(1)}%</div>
+    <div class="stat-lbl">Best Score</div>
+  </div>
+  <div class="stat-card" data-emoji="📝">
+    <div class="stat-val" style="color:var(--accent4)">${last.toFixed(1)}%</div>
+    <div class="stat-lbl">Last Test Score</div>
+  </div>
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <div class="card-header"><h3>➕ Add Test Result</h3></div>
+    <div class="field">
+      <label>Test Name *</label>
+      <div class="field-inner"><span class="icon">📝</span><input type="text" id="test-name" placeholder="Full Mock Test #1"></div>
+    </div>
+    <div class="field">
+      <label>Subject</label>
+      <div class="field-inner"><span class="icon">📘</span><input type="text" id="test-subject" placeholder="e.g. Physics, All Subjects"></div>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label>Score *</label>
+        <div class="field-inner"><span class="icon">✓</span><input type="number" id="test-score" placeholder="85" min="0"></div>
+      </div>
+      <div class="field">
+        <label>Total Marks *</label>
+        <div class="field-inner"><span class="icon">#</span><input type="number" id="test-total" placeholder="100" min="1"></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Date</label>
+      <input type="date" class="no-icon date-today" id="test-date">
+    </div>
+    <div class="field">
+      <label>Notes</label>
+      <div class="field-inner"><span class="icon">📌</span><input type="text" id="test-notes" placeholder="Areas to improve..."></div>
+    </div>
+    <button class="btn btn-primary" onclick="addTest()">Record Test →</button>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3>📈 Score Trend</h3></div>
+    <div class="chart-container"><canvas id="test-trend-chart"></canvas></div>
+    <div style="display:flex;gap:12px;margin-top:12px;font-size:12px">
+      <span style="color:var(--success)">● ≥75% Pass</span>
+      <span style="color:var(--accent4)">● 50–74% Average</span>
+      <span style="color:var(--danger)">● &lt;50% Needs Work</span>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h3>📋 All Test Results</h3></div>
+  <div class="scrollable" id="tests-list"></div>
+</div>`;
+};
+
+// ─── RESOURCES PAGE ───────────────────────────────────────────────────────────
+const renderResources = () => `
+<div class="page-header">
+  <div><h2>Resources</h2><p>Your personal study library</p></div>
+</div>
+<div class="sidebar-layout">
+  <div class="card">
+    <div class="card-header"><h3>➕ Add Resource</h3></div>
+    <div class="field">
+      <label>Title *</label>
+      <div class="field-inner"><span class="icon">📄</span><input type="text" id="res-title" placeholder="NCERT Physics Vol 1"></div>
+    </div>
+    <div class="field">
+      <label>URL / Link</label>
+      <div class="field-inner"><span class="icon">🔗</span><input type="url" id="res-url" placeholder="https://..."></div>
+    </div>
+    <div class="field">
+      <label>Category</label>
+      <select class="no-icon" id="res-cat">
+        <option value="Book">📖 Book</option>
+        <option value="Video">🎬 Video</option>
+        <option value="Notes">📄 Notes</option>
+        <option value="Website">🌐 Website</option>
+        <option value="Practice">✏️ Practice</option>
+        <option value="Other">🗂 Other</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Tags (comma-separated)</label>
+      <div class="field-inner"><span class="icon">🏷</span><input type="text" id="res-tags" placeholder="physics, chapter 3, waves"></div>
+    </div>
+    <button class="btn btn-primary" onclick="addResource()">Save Resource →</button>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3>🗂 Library</h3></div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <div class="search-bar" style="flex:1;margin-bottom:0">
+        <span class="icon">🔍</span>
+        <input type="text" placeholder="Search resources..." oninput="handleSearch(this.value)" value="${state.searchQuery}">
+      </div>
+      <select class="no-icon" id="res-filter" style="background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:8px 12px;color:var(--text);font-family:var(--font-body)" onchange="refreshResources()">
+        <option value="all">All</option>
+        <option value="Book">Books</option>
+        <option value="Video">Videos</option>
+        <option value="Notes">Notes</option>
+        <option value="Website">Websites</option>
+        <option value="Practice">Practice</option>
+      </select>
+    </div>
+    <div class="scrollable" id="resources-list"></div>
+  </div>
+</div>`;
+
+// ─── NOTES PAGE ───────────────────────────────────────────────────────────────
+const renderNotes = () => `
+<div class="page-header">
+  <div><h2>Quick Notes</h2><p>Capture important ideas and key concepts</p></div>
+</div>
+<div class="sidebar-layout">
+  <div class="card">
+    <div class="card-header"><h3>➕ New Note</h3></div>
+    <div class="field">
+      <label>Title *</label>
+      <div class="field-inner"><span class="icon">📝</span><input type="text" id="note-title" placeholder="Note title"></div>
+    </div>
+    <div class="field">
+      <label>Subject</label>
+      <div class="field-inner"><span class="icon">📘</span><input type="text" id="note-subject" placeholder="e.g. Chemistry"></div>
+    </div>
+    <div class="field">
+      <label>Content *</label>
+      <textarea class="no-icon" id="note-content" placeholder="Write your note here..." style="min-height:120px"></textarea>
+    </div>
+    <button class="btn btn-primary" onclick="addNote()">Save Note →</button>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3>📓 All Notes</h3></div>
+    <div class="search-bar">
+      <span class="icon">🔍</span>
+      <input type="text" placeholder="Search notes..." oninput="handleSearch(this.value)" value="${state.searchQuery}">
+    </div>
+    <div class="scrollable" id="notes-list"></div>
+  </div>
+</div>`;
+
+// ─── SETTINGS PAGE ────────────────────────────────────────────────────────────
+const renderSettings = () => `
+<div class="page-header">
+  <div><h2>Settings</h2><p>Customize your PrepMaster experience</p></div>
+</div>
+
+<div class="two-col">
+  <div>
+    <div class="card">
+      <div class="card-header"><h3>👤 Profile</h3></div>
+      <div class="profile-section">
+        <div class="profile-avatar">${state.currentUser.fullName.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase()}</div>
+        <div>
+          <h3 id="profile-name" style="font-size:18px;font-weight:700"></h3>
+          <p id="profile-username" style="color:var(--muted);font-size:13px;margin-top:4px"></p>
+          <p id="profile-email" style="color:var(--muted);font-size:12px;margin-top:2px"></p>
+          <p id="profile-joined" style="color:var(--muted);font-size:11px;margin-top:2px"></p>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;text-align:center;margin-top:4px">
+        <div style="background:var(--surface);border-radius:10px;padding:10px">
+          <div style="font-family:var(--font-head);font-size:20px;font-weight:800;color:var(--accent)">${state.sessions.length}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">SESSIONS</div>
+        </div>
+        <div style="background:var(--surface);border-radius:10px;padding:10px">
+          <div style="font-family:var(--font-head);font-size:20px;font-weight:800;color:var(--success)">${state.goals.filter(g=>g.done).length}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">GOALS DONE</div>
+        </div>
+        <div style="background:var(--surface);border-radius:10px;padding:10px">
+          <div style="font-family:var(--font-head);font-size:20px;font-weight:800;color:var(--accent4)">${state.tests.length}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">TESTS</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3>🔒 Change Password</h3></div>
+      <div class="field">
+        <label>Current Password</label>
+        <div class="field-inner"><span class="icon">🔒</span><input type="password" id="curr-pass" placeholder="Current password"><button class="eye-btn" onclick="togglePass('curr-pass',this)">👁</button></div>
+      </div>
+      <div class="field">
+        <label>New Password</label>
+        <div class="field-inner"><span class="icon">🔑</span><input type="password" id="new-pass" placeholder="Min 6 characters"><button class="eye-btn" onclick="togglePass('new-pass',this)">👁</button></div>
+      </div>
+      <div class="field">
+        <label>Confirm New Password</label>
+        <div class="field-inner"><span class="icon">🔑</span><input type="password" id="conf-pass" placeholder="Repeat new password"></div>
+      </div>
+      <button class="btn btn-primary" onclick="changePassword()">Update Password →</button>
+    </div>
+  </div>
+
+  <div>
+    <div class="card">
+      <div class="card-header"><h3>🎯 Exam Details</h3></div>
+      <div class="field">
+        <label>Exam / Job Title</label>
+        <div class="field-inner"><span class="icon">🎓</span><input type="text" id="exam-name" placeholder="e.g. UPSC 2026, Google SWE"></div>
+      </div>
+      <div class="field">
+        <label>Target Date</label>
+        <input type="date" class="no-icon" id="exam-date">
+      </div>
+      <button class="btn btn-primary" onclick="saveExam()">Save Exam Details →</button>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3>🎨 Theme Color</h3></div>
+      <div class="color-swatches" style="margin-bottom:16px">
+        ${Object.entries(ACCENT_COLORS).map(([k,v])=>
+          `<div class="color-swatch" data-scheme="${k}" style="background:${v.accent}" onclick="setColorScheme('${k}')" title="${k}"></div>`
+        ).join('')}
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <h4>Daily Study Goal (hours)</h4>
+            <p>Set your target study hours per day</p>
+          </div>
+          <input type="number" id="daily-goal" value="4" min="1" max="16" style="width:60px;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;padding:6px;color:var(--text);font-family:var(--font-body);text-align:center">
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="saveSettings()" style="margin-top:12px">Save Settings</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3>💾 Data Management</h3></div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button class="btn btn-ghost" onclick="exportData()">⬇ Export All Data (JSON)</button>
+        <button class="btn btn-danger" onclick="clearAllData()">🗑 Clear All My Data</button>
+      </div>
+      <p style="font-size:11px;color:var(--muted);margin-top:12px">All data is stored locally in your browser. Export regularly to keep backups.</p>
+    </div>
+  </div>
+</div>`;
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+loadUsers();
+render();
+</script>
+</body>
+</html>
