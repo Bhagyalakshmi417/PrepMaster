@@ -5,7 +5,54 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PrepMaster — Study Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
+  <script>
+function signup() {
+    let username = document.getElementById("username").value;
+    let password = document.getElementById("password").value;
+
+    if(username === "" || password === "") {
+        alert("Please fill all fields");
+        return;
+    }
+
+    let user = {
+        username: username,
+        password: password
+    };
+
+    localStorage.setItem("user", JSON.stringify(user));
+
+    alert("Signup successful!");
+    showDashboard();
+}
+
+function login() {
+    let username = document.getElementById("username").value;
+    let password = document.getElementById("password").value;
+
+    let storedUser = JSON.parse(localStorage.getItem("user"));
+
+    if(storedUser && storedUser.username === username && storedUser.password === password) {
+        alert("Login successful!");
+        showDashboard();
+    } else {
+        alert("Invalid credentials!");
+    }
+}
+
+function showDashboard() {
+    document.getElementById("authSection").style.display = "none";
+    document.getElementById("dashboardSection").style.display = "block";
+}
+
+window.onload = function() {
+    let storedUser = localStorage.getItem("user");
+    if(storedUser) {
+        showDashboard();
+    }
+}
+</script>
 <style>
 :root {
   --bg: #0d0d14;
